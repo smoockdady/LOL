@@ -109,10 +109,10 @@ h3 { font-family: var(--f-label); font-size: 15px; text-transform: uppercase; le
 .who { font-family: var(--f-label); font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 .cn { font-size: 22px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
 .cr { color: var(--muted); font-size: 13px; }
-.hex { display: inline-grid; place-items: center; width: 64px; height: 72px; flex: none; padding: 2px; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: var(--hc, var(--accent)); }
-.hex > span { display: grid; place-items: center; width: 100%; height: 100%; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: color-mix(in srgb, var(--hc, var(--accent)) 16%, var(--surface)); font-family: var(--f-label); font-size: 24px; font-weight: 700; letter-spacing: .02em; }
+.hex { display: inline-grid; place-items: center; width: 64px; height: 72px; flex: none; padding: 2px; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: currentColor; }
+.hex > span { display: grid; place-items: center; width: 100%; height: 100%; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: color-mix(in srgb, currentColor 16%, var(--surface)); font-family: var(--f-label); font-size: 24px; font-weight: 700; letter-spacing: .02em; }
 .hex.sm { width: 52px; height: 58px; } .hex.sm > span { font-size: 20px; }
-.h-ad, .t-ad { --hc: var(--ad); } .h-ap, .t-ap { --hc: var(--ap); } .h-mx, .t-ut { --hc: var(--ut); } .t-df { --hc: var(--df); }
+.h-ad, .t-ad { color: var(--ad); } .h-ap, .t-ap { color: var(--ap); } .h-mx, .t-ut { color: var(--ut); } .t-df { color: var(--df); }
 .hex > span { color: var(--fg); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font-size: 12px; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); }
@@ -150,6 +150,12 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
 .up { color: var(--buff); font-weight: 700; } .down { color: var(--nerf); font-weight: 700; } .rw { color: var(--ut); font-weight: 700; }
 .foot { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 4px; }
 @media (prefers-reduced-motion: no-preference) { .step, .box, .fav, .champ { transition: border-color .15s, transform .15s; } .step:hover { border-color: var(--accent); transform: translateY(-2px); } }
+
+.top-r { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.langs { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.langs button { font-family: var(--f-label); font-size: 15px; font-weight: 700; letter-spacing: .12em; padding: 8px 14px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.langs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+.langs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 </style>
 </head>
 <body>
@@ -158,32 +164,38 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
 <div class="wrap">
   <header class="top">
     <div>
-      <p class="eyebrow">Liên Minh Huyền Thoại · Mùa 2026</p>
-      <h1>Build Khắc Chế</h1>
-      <p class="lead">Chọn đường, tướng của bạn và tướng đối thủ. Trang tính thứ tự lên đồ, giày, bảng ngọc và cách chơi khắc chế.</p>
+      <p class="eyebrow" id="t-eyebrow"></p>
+      <h1 id="t-h1"></h1>
+      <p class="lead" id="t-lead"></p>
     </div>
-    <div class="patch"><i></i>Patch <b>26.22</b> · live 04/11 · 26.23 dự kiến 18/11</div>
+    <div class="top-r">
+      <div class="langs" role="group" aria-label="Ngôn ngữ / Language">
+        <button type="button" data-lang="vi" title="Tiếng Việt" aria-pressed="true">VN</button>
+        <button type="button" data-lang="en" title="English" aria-pressed="false">US</button>
+      </div>
+      <div class="patch" id="t-patch"></div>
+    </div>
   </header>
 
   <div class="layout">
-    <section class="panel" aria-label="Chọn đường và tướng">
+    <section class="panel" aria-label="Pick lane and champions">
       <div class="sec" id="favs"></div>
       <div class="sec">
-        <h3>Đường</h3>
-        <div class="lanes" id="lanes" role="group" aria-label="Chọn đường"></div>
+        <h3 id="t-lane"></h3>
+        <div class="lanes" id="lanes" role="group"></div>
       </div>
       <div class="pick" id="pick-me"></div>
-      <div class="vs">đấu với</div>
+      <div class="vs" id="t-vs"></div>
       <div class="pick" id="pick-foe"></div>
-      <p class="note">▲ buff, ▼ nerf, ◆ làm lại ở patch 26.22.</p>
+      <p class="note" id="t-note"></p>
     </section>
 
     <section class="result" id="result" aria-live="polite"></section>
   </div>
 
   <footer class="foot">
-    <span>Gợi ý được tính theo luật khắc chế (loại sát thương, khống chế, hồi máu, lá chắn, độ trâu của đối thủ). Đây không phải thống kê tỉ lệ thắng.</span>
-    <span>Chưa có Zaahen và Locke vì chưa xác minh được bộ chiêu. Đồ khởi đầu và phần thưởng nhiệm vụ vị trí đổi theo mùa nên cần đối chiếu cửa hàng trong game. Số liệu patch lấy từ ghi chú 26.22.</span>
+    <span id="t-f1"></span>
+    <span id="t-f2"></span>
   </footer>
 </div>
 
@@ -312,6 +324,44 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
   CH.forEach(function (c) { BY[c.n] = c; });
 
 
+  var lang = "vi";
+  try {
+    var sl = localStorage.getItem("lmht-lang");
+    lang = (sl === "en" || sl === "vi") ? sl : (((navigator.language || "").toLowerCase().indexOf("vi") === 0) ? "vi" : "en");
+  } catch (e) {}
+  function L(vi, en) { return lang === "en" ? en : vi; }
+
+  var LANES_EN = { T: "Top", J: "Jungle", M: "Mid", B: "Bot", S: "Support" };
+  var LANE_FULL_EN = { T: "Top lane", J: "Jungle", M: "Mid lane", B: "Bot lane (marksman)", S: "Support" };
+  var LB_EN = { apm: "Burst mage", apd: "Control mage", apa: "AP assassin", ada: "AD assassin", mmc: "Crit marksman", mmo: "On-hit marksman", brs: "AD fighter", jug: "Juggernaut", spl: "Splitpush fighter", tnk: "Tank", apb: "AP fighter", ent: "Enchanter", eng: "Engage support", mgs: "Mage support", ona: "On-hit fighter" };
+  var TAGEN = { assassin: "Assassin", poke: "Poke", cc: "Has crowd control", hardcc: "Hard CC", heal: "Healing", shield: "Shields", dash: "Mobile", hyper: "Late-game scaling", tank: "Tanky", crit: "Crit", onhit: "On-hit", fighter: "Fighter", splitter: "Splitpusher", ranged: "Ranged", burstAP: "Magic burst", burstAD: "Physical burst", armor: "Heavy armor", trueDmg: "True damage", support: "Support" };
+  var PATCH_EN = {
+    "Aurelion Sol": "E deals more damage; AP ratio now 60 to 80%.",
+    "Corki": "R deals more damage; Big One bonus AD ratio up to 180%.",
+    "Kayle": "Q and R cooldowns reduced, stronger early.",
+    "Maokai": "Q deals extra max-health damage.",
+    "Naafiri": "Q heals more; W bonus AD up to 22%.",
+    "Rumble": "R AP ratio increased.",
+    "Shen": "Q deals more damage to jungle monsters.",
+    "Smolder": "W explosion damage up. The Doran's Bow nerf (-1 AD) affects him slightly.",
+    "Viktor": "Health growth 100 to 105; R AP ratio up to 60%.",
+    "Yasuo": "Q total AD ratio 105% to 100%. Crit builds are hit.",
+    "Thresh": "Base AD 56 to 54; R damage 250/400/550 to 200/350/500.",
+    "Mel": "Reworked: W no longer reflects projectiles, it destroys them and deals light retaliation damage. Lower early health, more power shifted to late game. Q refunds some cooldown on champion hit."
+  };
+  var ITEMPATCH_EN = {
+    "Overlord's Bloodmail": "Patch 26.22 buff: AD 30 to 40; max Retribution 12% down to 10% total AD.",
+    "Bastionbreaker": "Reported strong for splitpush fighters in 26.15. Check price and stats in the shop.",
+    "Yun Tal Wildarrows": "Crit item for the 2026 season. Check the current price in the shop."
+  };
+  function laneName(k) { return L(LANES[k], LANES_EN[k]); }
+  function laneFull(k) { return L(LANE_FULL[k], LANE_FULL_EN[k]); }
+  function lbName(a) { return L(ARCH[a].lb, LB_EN[a]); }
+  function tagName(t) { return L(TAGVN[t], TAGEN[t]); }
+  function patchText(n) { return L(PATCH[n][1], PATCH_EN[n]); }
+  function itemPatch(i) { return ITEMPATCH[i] ? L(ITEMPATCH[i], ITEMPATCH_EN[i]) : ""; }
+  function enx(s) { return lang === "en" ? s.replace(/ hoặc /g, " or ").replace("(đánh rỉa)", "(poke)") : s; }
+
   var state = { lane: "M", me: "Viktor", foe: "Zed" };
   try {
     var s = JSON.parse(localStorage.getItem("lmht-build") || "null");
@@ -327,7 +377,7 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
   function mark(n) {
     var p = PATCH[n];
     if (!p) return "";
-    return p[0] === "up" ? '<span class="mk-b" title="Buff 26.22">▲</span>' : p[0] === "down" ? '<span class="mk-n" title="Nerf 26.22">▼</span>' : '<span class="mk-r" title="Làm lại 26.22">◆</span>';
+    return p[0] === "up" ? '<span class="mk-b" title="' + L("Buff 26.22", "Buff 26.22") + '">▲</span>' : p[0] === "down" ? '<span class="mk-n" title="' + L("Nerf 26.22", "Nerf 26.22") + '">▼</span>' : '<span class="mk-r" title="' + L("Làm lại 26.22", "Reworked 26.22") + '">◆</span>';
   }
   function save() { try { localStorage.setItem("lmht-build", JSON.stringify(state)); } catch (e) {} }
   function laneList() { return CH.filter(function (c) { return c.l.indexOf(state.lane) > -1; }).sort(function (a, b) { return a.n.localeCompare(b.n); }); }
@@ -337,54 +387,54 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
   function compute(u, e) {
     var rules = [];
     function add(item, reason, pri) { rules.push({ item: item, reason: reason, pri: pri }); }
-    var k = u.kind, mk = (u.a === "mmc" || u.a === "mmo");
+    var k = u.kind, mk = (u.a === "mmc" || u.a === "mmo"), n = e.n;
 
     if (has(e, "heal")) {
       if (k === "AD") {
-        if (mk) add("Mortal Reminder", e.n + " hồi máu nhiều. Mortal Reminder vừa xuyên giáp vừa cắt hồi máu cho xạ thủ. Mua Executioner's Calling sớm khi cần.", 10);
-        else add("Chempunk Chainsword", e.n + " hồi máu nhiều. Chempunk Chainsword cắt hồi máu mà không bỏ sát thương vật lý. Mua Executioner's Calling sớm khi cần.", 10);
-      } else if (k === "AP") add("Morellonomicon", e.n + " hồi máu nhiều. Morellonomicon cắt hồi máu và tăng sát thương phép. Mua Oblivion Orb sớm khi cần.", 10);
-      else if (k === "TK" && e.d === "AD") add("Thornmail", e.n + " hồi máu và đánh thường là nguồn sát thương chính. Thornmail phản lại và cắt hồi máu khi bị đánh.", 10);
+        if (mk) add("Mortal Reminder", L(n + " hồi máu nhiều. Mortal Reminder vừa xuyên giáp vừa cắt hồi máu cho xạ thủ. Mua Executioner's Calling sớm khi cần.", n + " heals a lot. Mortal Reminder adds penetration and cuts healing for marksmen. Buy Executioner's Calling early when needed."), 10);
+        else add("Chempunk Chainsword", L(n + " hồi máu nhiều. Chempunk Chainsword cắt hồi máu mà không bỏ sát thương vật lý. Mua Executioner's Calling sớm khi cần.", n + " heals a lot. Chempunk Chainsword cuts healing and keeps your physical damage. Buy Executioner's Calling early when needed."), 10);
+      } else if (k === "AP") add("Morellonomicon", L(n + " hồi máu nhiều. Morellonomicon cắt hồi máu và tăng sát thương phép. Mua Oblivion Orb sớm khi cần.", n + " heals a lot. Morellonomicon cuts healing and boosts magic damage. Buy Oblivion Orb early when needed."), 10);
+      else if (k === "TK" && e.d === "AD") add("Thornmail", L(n + " hồi máu và đánh thường là nguồn sát thương chính. Thornmail phản lại và cắt hồi máu khi bị đánh.", n + " heals and relies on basic attacks. Thornmail reflects damage and cuts healing when hit."), 10);
     }
     if (has(e, "tank") || has(e, "armor")) {
       if (k === "AD") {
-        if (u.a === "mmc") add("Lord Dominik's Regard", e.n + " có nhiều máu và giáp. Lord Dominik's xuyên giáp và gây thêm sát thương lên mục tiêu máu dày.", 8);
-        else if (u.a === "mmo" || u.a === "ona") add("Blade of the Ruined King", e.n + " có nhiều máu. Blade of the Ruined King gây sát thương theo % máu hiện tại.", 8);
-        else add("Black Cleaver", e.n + " dày máu và giáp. Black Cleaver bào giáp và gây sát thương theo cộng dồn.", 8);
+        if (u.a === "mmc") add("Lord Dominik's Regard", L(n + " có nhiều máu và giáp. Lord Dominik's xuyên giáp và gây thêm sát thương lên mục tiêu máu dày.", n + " has lots of health and armor. Lord Dominik's Regard penetrates armor and deals bonus damage to high-health targets."), 8);
+        else if (u.a === "mmo" || u.a === "ona") add("Blade of the Ruined King", L(n + " có nhiều máu. Blade of the Ruined King gây sát thương theo % máu hiện tại.", n + " has lots of health. Blade of the Ruined King deals damage based on current health."), 8);
+        else add("Black Cleaver", L(n + " dày máu và giáp. Black Cleaver bào giáp và gây sát thương theo cộng dồn.", n + " is bulky. Black Cleaver shreds armor and stacks damage."), 8);
       } else if (k === "AP") {
-        add("Liandry's Torment", e.n + " nhiều máu. Liandry's gây sát thương theo % máu tối đa.", 8);
-        add("Void Staff", e.n + " có kháng phép dày. Void Staff xuyên 40% kháng phép.", 6);
+        add("Liandry's Torment", L(n + " nhiều máu. Liandry's gây sát thương theo % máu tối đa.", n + " has lots of health. Liandry's burns for a percentage of max health."), 8);
+        add("Void Staff", L(n + " có kháng phép dày. Void Staff xuyên 40% kháng phép.", n + " has high magic resist. Void Staff penetrates 40% magic resist."), 6);
       }
     }
     if (e.d === "AD" && (has(e, "assassin") || has(e, "burstAD"))) {
-      if (k === "AP") add("Zhonya's Hourglass", e.n + " là sát thủ vật lý. Zhonya's cho giáp và bấm dừng thời gian để né bộ combo.", 9);
-      else if (mk) add("Guardian Angel", e.n + " lao vào cắt mục tiêu. Guardian Angel cho một mạng thứ hai trong giao tranh.", 8);
-      else if (k === "AD") add("Death's Dance", e.n + " burst nhanh. Death's Dance trì hoãn sát thương nhận vào và hồi lại khi hạ mục tiêu.", 8);
-      else if (k === "TK") add("Frozen Heart", e.n + " dựa vào đánh thường và chiêu vật lý. Frozen Heart cho giáp dày và làm chậm tốc đánh.", 7);
-      else if (k === "EN") add("Locket of the Iron Solari", e.n + " burst vật lý. Locket tạo lá chắn cho cả đội trước đợt lao vào.", 7);
+      if (k === "AP") add("Zhonya's Hourglass", L(n + " là sát thủ vật lý. Zhonya's cho giáp và bấm dừng thời gian để né bộ combo.", n + " is a physical assassin. Zhonya's gives armor and a stasis to dodge the combo."), 9);
+      else if (mk) add("Guardian Angel", L(n + " lao vào cắt mục tiêu. Guardian Angel cho một mạng thứ hai trong giao tranh.", n + " dives to pick off targets. Guardian Angel gives a second life in fights."), 8);
+      else if (k === "AD") add("Death's Dance", L(n + " burst nhanh. Death's Dance trì hoãn sát thương nhận vào và hồi lại khi hạ mục tiêu.", n + " bursts fast. Death's Dance delays damage taken and heals on kills."), 8);
+      else if (k === "TK") add("Frozen Heart", L(n + " dựa vào đánh thường và chiêu vật lý. Frozen Heart cho giáp dày và làm chậm tốc đánh.", n + " relies on attacks and physical spells. Frozen Heart gives heavy armor and slows attack speed."), 7);
+      else if (k === "EN") add("Locket of the Iron Solari", L(n + " burst vật lý. Locket tạo lá chắn cho cả đội trước đợt lao vào.", n + " has physical burst. Locket shields the team before the dive."), 7);
     }
     if (e.d === "AP" && (has(e, "assassin") || has(e, "burstAP"))) {
-      if (k === "AP" || k === "EN") add("Banshee's Veil", e.n + " burst phép. Banshee's Veil chặn một chiêu và cho kháng phép.", 9);
-      else if (u.a === "ada") add("Edge of Night", e.n + " burst phép. Edge of Night chặn một chiêu đầu và tăng khả năng chống combo.", 8);
-      else if (k === "AD") add("Maw of Malmortius", e.n + " gây sát thương phép lớn. Maw tạo lá chắn khi máu xuống thấp và cho kháng phép.", 8);
-      else if (k === "TK") add("Force of Nature", e.n + " gây sát thương phép. Force of Nature cho kháng phép và tốc độ chạy.", 8);
+      if (k === "AP" || k === "EN") add("Banshee's Veil", L(n + " burst phép. Banshee's Veil chặn một chiêu và cho kháng phép.", n + " has magic burst. Banshee's Veil blocks one spell and grants magic resist."), 9);
+      else if (u.a === "ada") add("Edge of Night", L(n + " burst phép. Edge of Night chặn một chiêu đầu và tăng khả năng chống combo.", n + " has magic burst. Edge of Night blocks the first spell and helps you survive combos."), 8);
+      else if (k === "AD") add("Maw of Malmortius", L(n + " gây sát thương phép lớn. Maw tạo lá chắn khi máu xuống thấp và cho kháng phép.", n + " deals heavy magic damage. Maw of Malmortius shields you at low health and gives magic resist."), 8);
+      else if (k === "TK") add("Force of Nature", L(n + " gây sát thương phép. Force of Nature cho kháng phép và tốc độ chạy.", n + " deals magic damage. Force of Nature gives magic resist and move speed."), 8);
     }
     if (has(e, "hardcc") || has(e, "cc")) {
       var p = has(e, "hardcc") ? 7 : 5;
-      if (u.a === "ent") add("Mikael's Blessing", e.n + " có khống chế. Mikael's giải CC cho đồng đội.", p + 1);
-      else if (mk) add("Silvermere Dawn", e.n + " có khống chế. Silvermere Dawn xóa hiệu ứng khống chế khi kích hoạt.", p);
-      else if (k === "AD" && u.a !== "ada") add("Silvermere Dawn", e.n + " có khống chế. Silvermere Dawn xóa hiệu ứng khống chế khi kích hoạt.", p);
-      else if (u.a === "ada") add("Edge of Night", e.n + " có khống chế. Edge of Night chặn chiêu đầu tiên khi bị khóa mục tiêu.", p);
-      else if (k === "AP") add("Banshee's Veil", e.n + " có khống chế. Banshee's Veil chặn chiêu khống chế đầu tiên.", p);
+      if (u.a === "ent") add("Mikael's Blessing", L(n + " có khống chế. Mikael's giải CC cho đồng đội.", n + " has crowd control. Mikael's cleanses allies."), p + 1);
+      else if (mk) add("Silvermere Dawn", L(n + " có khống chế. Silvermere Dawn xóa hiệu ứng khống chế khi kích hoạt.", n + " has crowd control. Silvermere Dawn removes crowd control when activated."), p);
+      else if (k === "AD" && u.a !== "ada") add("Silvermere Dawn", L(n + " có khống chế. Silvermere Dawn xóa hiệu ứng khống chế khi kích hoạt.", n + " has crowd control. Silvermere Dawn removes crowd control when activated."), p);
+      else if (u.a === "ada") add("Edge of Night", L(n + " có khống chế. Edge of Night chặn chiêu đầu tiên khi bị khóa mục tiêu.", n + " has crowd control. Edge of Night blocks the first targeting spell."), p);
+      else if (k === "AP") add("Banshee's Veil", L(n + " có khống chế. Banshee's Veil chặn chiêu khống chế đầu tiên.", n + " has crowd control. Banshee's Veil blocks the first crowd-control spell."), p);
     }
     if (has(e, "dash") && has(e, "assassin")) {
-      if (k === "AP" && u.a !== "apd") add("Rylai's Crystal Scepter", e.n + " cơ động. Rylai's làm chậm để giữ mục tiêu trong tầm.", 6);
-      if (k === "AD" && u.a !== "ada" && !mk) add("Serylda's Grudge", e.n + " cơ động. Serylda's làm chậm và xuyên giáp.", 6);
+      if (k === "AP" && u.a !== "apd") add("Rylai's Crystal Scepter", L(n + " cơ động. Rylai's làm chậm để giữ mục tiêu trong tầm.", n + " is mobile. Rylai's slows to keep the target in range."), 6);
+      if (k === "AD" && u.a !== "ada" && !mk) add("Serylda's Grudge", L(n + " cơ động. Serylda's làm chậm và xuyên giáp.", n + " is mobile. Serylda's slows and penetrates armor."), 6);
     }
-    if (u.a === "ada" && has(e, "shield")) add("Serpent's Fang", e.n + " có lá chắn. Serpent's Fang giảm sức mạnh lá chắn của mục tiêu.", 7);
-    if ((has(e, "crit") || has(e, "onhit")) && k === "TK") add("Randuin's Omen", e.n + " dựa vào đánh thường. Randuin's giảm sát thương chí mạng và làm chậm khi kích hoạt.", 7);
-    if (has(e, "poke") && e.d === "AP" && k === "AP") add("Banshee's Veil", e.n + " đánh rỉa bằng phép. Banshee's Veil chặn chiêu rỉa đầu tiên.", 5);
-    if (has(e, "poke") && k === "AD" && !mk) add("Spirit Visage", e.n + " đánh rỉa liên tục. Spirit Visage tăng hồi máu và kháng phép.", 5);
+    if (u.a === "ada" && has(e, "shield")) add("Serpent's Fang", L(n + " có lá chắn. Serpent's Fang giảm sức mạnh lá chắn của mục tiêu.", n + " has shields. Serpent's Fang reduces shield strength."), 7);
+    if ((has(e, "crit") || has(e, "onhit")) && k === "TK") add("Randuin's Omen", L(n + " dựa vào đánh thường. Randuin's giảm sát thương chí mạng và làm chậm khi kích hoạt.", n + " relies on basic attacks. Randuin's reduces crit damage and slows on activation."), 7);
+    if (has(e, "poke") && e.d === "AP" && k === "AP") add("Banshee's Veil", L(n + " đánh rỉa bằng phép. Banshee's Veil chặn chiêu rỉa đầu tiên.", n + " pokes with magic. Banshee's Veil blocks the first poke."), 5);
+    if (has(e, "poke") && k === "AD" && !mk) add("Spirit Visage", L(n + " đánh rỉa liên tục. Spirit Visage tăng hồi máu và kháng phép.", n + " pokes constantly. Spirit Visage boosts healing and magic resist."), 5);
 
     var seen = {}, out = [];
     rules.sort(function (a, b) { return b.pri - a.pri; }).forEach(function (r) { if (!seen[r.item]) { seen[r.item] = 1; out.push(r); } });
@@ -393,65 +443,78 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
 
   function boots(u, e) {
     var hard = has(e, "hardcc");
-    if (e.d === "AP" || hard) return ["Mercury's Treads", e.d === "AP" ? e.n + " gây sát thương phép." : e.n + " có CC cứng.", "Kháng phép và giảm thời gian bị khống chế."];
-    if (e.d === "AD" && (has(e, "assassin") || has(e, "fighter") || has(e, "crit") || has(e, "onhit"))) return ["Plated Steelcaps", e.n + " gây sát thương bằng đánh thường.", "Giáp và giảm sát thương từ đòn đánh thường."];
-    return [ARCH[u.a].boots, "Không có mối đe dọa nào đòi đổi giày.", "Dùng giày mặc định của kiểu tướng."];
+    if (e.d === "AP" || hard) return ["Mercury's Treads", e.d === "AP" ? L(e.n + " gây sát thương phép.", e.n + " deals magic damage.") : L(e.n + " có CC cứng.", e.n + " has hard CC."), L("Kháng phép và giảm thời gian bị khống chế.", "Magic resist and reduced crowd-control duration.")];
+    if (e.d === "AD" && (has(e, "assassin") || has(e, "fighter") || has(e, "crit") || has(e, "onhit"))) return ["Plated Steelcaps", L(e.n + " gây sát thương bằng đánh thường.", e.n + " deals damage with basic attacks."), L("Giáp và giảm sát thương từ đòn đánh thường.", "Armor and reduced basic-attack damage.")];
+    return [ARCH[u.a].boots, L("Không có mối đe dọa nào đòi đổi giày.", "No threat calls for a boots swap."), L("Dùng giày mặc định của kiểu tướng.", "Default boots for this champion type.")];
   }
 
   function tips(u, e) {
-    var t = [];
+    var t = [], n = e.n;
     var squishy = (u.kind === "AP" || u.kind === "EN" || u.a === "mmc" || u.a === "mmo");
-    if (has(e, "assassin") && squishy) t.push("Giữ kỹ năng thoát thân và Tốc biến cho " + e.n + ". Đặt mắt ở bụi cỏ hai bên và đứng gần lính hoặc đồng đội.");
-    if (has(e, "poke")) t.push(e.n + " đánh rỉa tầm xa. Đừng đứng yên trong tầm, trade khi chiêu của họ đang hồi.");
-    if (has(e, "hardcc")) t.push("Chờ " + e.n + " dùng chiêu khống chế rồi mới giao tranh. Đứng sau lính để chặn chiêu bay.");
-    if (has(e, "hyper")) t.push(e.n + " mạnh hơn về cuối. Ép nhịp bằng mục tiêu sớm thay vì kéo dài trận.");
-    if (has(e, "splitter")) t.push(e.n + " thích đẩy đường 1 đấu 1. Cần ward cánh và đồng đội phản ứng nhanh.");
-    if (has(e, "tank")) t.push("Đối thủ dày máu. Ưu tiên sát thương xuyên giáp, theo % máu hoặc kéo dài như Liandry's, Black Cleaver.");
-    if (has(e, "heal")) t.push("Mua đồ cắt hồi máu sau khi " + e.n + " có món lõi đầu tiên, không nên mua quá muộn.");
-    if (has(e, "shield")) t.push(e.n + " có lá chắn. Đánh sau khi lá chắn vỡ thay vì xả chiêu ngay.");
-    if (has(e, "dash") && !has(e, "assassin")) t.push(e.n + " có kỹ năng lao. Giữ chiêu làm chậm hoặc khống chế để trả lời.");
-    if (!t.length) t.push("Không có điểm cần đổi lớn. Chơi theo kế hoạch đồ mặc định của " + u.n + " và theo dõi món đồ đầu tiên của " + e.n + ".");
+    if (has(e, "assassin") && squishy) t.push(L("Giữ kỹ năng thoát thân và Tốc biến cho " + n + ". Đặt mắt ở bụi cỏ hai bên và đứng gần lính hoặc đồng đội.", "Keep your escape and Flash up against " + n + ". Ward both brushes and stay near minions or allies."));
+    if (has(e, "poke")) t.push(L(n + " đánh rỉa tầm xa. Đừng đứng yên trong tầm, trade khi chiêu của họ đang hồi.", n + " pokes from range. Don't stand still in range; trade when their spells are on cooldown."));
+    if (has(e, "hardcc")) t.push(L("Chờ " + n + " dùng chiêu khống chế rồi mới giao tranh. Đứng sau lính để chặn chiêu bay.", "Wait for " + n + " to use crowd control before fighting. Stand behind minions to block skillshots."));
+    if (has(e, "hyper")) t.push(L(n + " mạnh hơn về cuối. Ép nhịp bằng mục tiêu sớm thay vì kéo dài trận.", n + " scales better into late game. Press your tempo with early objectives instead of dragging the game out."));
+    if (has(e, "splitter")) t.push(L(n + " thích đẩy đường 1 đấu 1. Cần ward cánh và đồng đội phản ứng nhanh.", n + " likes to split-push 1v1. You need wards on the flanks and allies who react fast."));
+    if (has(e, "tank")) t.push(L("Đối thủ dày máu. Ưu tiên sát thương xuyên giáp, theo % máu hoặc kéo dài như Liandry's, Black Cleaver.", "The enemy has lots of health. Prefer penetration, percent-health or sustained damage such as Liandry's or Black Cleaver."));
+    if (has(e, "heal")) t.push(L("Mua đồ cắt hồi máu sau khi " + n + " có món lõi đầu tiên, không nên mua quá muộn.", "Buy anti-heal after " + n + " gets the first core item; don't leave it too late."));
+    if (has(e, "shield")) t.push(L(n + " có lá chắn. Đánh sau khi lá chắn vỡ thay vì xả chiêu ngay.", n + " has shields. Hit after the shield breaks instead of dumping spells right away."));
+    if (has(e, "dash") && !has(e, "assassin")) t.push(L(n + " có kỹ năng lao. Giữ chiêu làm chậm hoặc khống chế để trả lời.", n + " has gap-closers. Save your slow or crowd control to answer."));
+    if (!t.length) t.push(L("Không có điểm cần đổi lớn. Chơi theo kế hoạch đồ mặc định của " + u.n + " và theo dõi món đồ đầu tiên của " + n + ".", "No major changes needed. Follow " + u.n + "'s default plan and watch " + n + "'s first item."));
     return t.slice(0, 5);
   }
 
   function composeBuild(u, e) {
     var core = u.core.slice(), cnt = compute(u, e), slots = [];
-    function inCore(n) { return core.indexOf(n) > -1; }
     var picks = [];
     cnt.forEach(function (r) { if (picks.length < 3) picks.push(r); });
-    var first = core[0];
-    if (picks.length && picks[0].pri >= 9 && picks[0].item === first) first = null;
-    slots.push({ item: core[0], kind: "core", reason: "Món lõi của " + u.n + " (" + ARCH[u.a].lb + ")." });
+    slots.push({ item: core[0], kind: "core", reason: L("Món lõi của " + u.n + " (" + lbName(u.a) + ").", "Core item of " + u.n + " (" + lbName(u.a) + ").") });
     var urgent = picks.length && picks[0].pri >= 9 ? picks.shift() : null;
     function pushCounter(r) {
       if (slots.some(function (s) { return s.item === r.item; })) return;
       slots.push({ item: r.item, kind: "counter", reason: r.reason });
     }
     if (urgent) pushCounter(urgent);
-    if (core[1] && !slots.some(function (s) { return s.item === core[1]; })) slots.push({ item: core[1], kind: "core", reason: "Món lõi tiếp theo của " + u.n + "." });
+    if (core[1] && !slots.some(function (s) { return s.item === core[1]; })) slots.push({ item: core[1], kind: "core", reason: L("Món lõi tiếp theo của " + u.n + ".", "Next core item of " + u.n + ".") });
     picks.forEach(pushCounter);
     core.slice(2).forEach(function (n) {
-      if (slots.length < 5 && !slots.some(function (s) { return s.item === n; })) slots.push({ item: n, kind: "core", reason: "Món hoàn thiện kiểu tướng." });
+      if (slots.length < 5 && !slots.some(function (s) { return s.item === n; })) slots.push({ item: n, kind: "core", reason: L("Món hoàn thiện kiểu tướng.", "Finishing item for the champion type.") });
     });
     slots = slots.slice(0, 5);
     var removed = core.filter(function (n) { return !slots.some(function (s) { return s.item === n; }); });
     return { slots: slots, removed: removed };
   }
 
-
-
   var FAV_MAIN = [["Cho'Gath", "T"], ["Cho'Gath", "J"], ["Sylas", "M"], ["Sylas", "J"], ["Miss Fortune", "B"], ["Caitlyn", "B"]];
   var FAV_SIM = [["Mordekaiser", "T"], ["Maokai", "T"], ["Rumble", "T"], ["Gwen", "T"],
     ["LeBlanc", "M"], ["Akali", "M"], ["Katarina", "M"], ["Diana", "J"],
     ["Jhin", "B"], ["Ashe", "B"], ["Varus", "B"], ["Ezreal", "B"], ["Jinx", "B"]];
 
+  function byId(id) { return document.getElementById(id); }
+
+  function renderStatic() {
+    document.documentElement.lang = lang;
+    byId("t-eyebrow").textContent = L("Liên Minh Huyền Thoại · Mùa 2026", "League of Legends · 2026 Season");
+    byId("t-h1").textContent = L("Build Khắc Chế", "Counter Build");
+    byId("t-lead").textContent = L("Chọn đường, tướng của bạn và tướng đối thủ. Trang tính thứ tự lên đồ, giày, bảng ngọc và cách chơi khắc chế.", "Pick a lane, your champion and the enemy champion. The page works out item order, boots, runes and how to play the matchup.");
+    byId("t-patch").innerHTML = L("<i></i>Patch <b>26.22</b> · live 04/11 · 26.23 dự kiến 18/11", "<i></i>Patch <b>26.22</b> · live Nov 4 · 26.23 expected Nov 18");
+    byId("t-lane").textContent = L("Đường", "Lane");
+    byId("t-vs").textContent = L("đấu với", "versus");
+    byId("t-note").textContent = L("▲ buff, ▼ nerf, ◆ làm lại ở patch 26.22.", "▲ buff, ▼ nerf, ◆ reworked in patch 26.22.");
+    byId("t-f1").textContent = L("Gợi ý được tính theo luật khắc chế (loại sát thương, khống chế, hồi máu, lá chắn, độ trâu của đối thủ). Đây không phải thống kê tỉ lệ thắng.", "Suggestions follow counter rules (damage type, crowd control, healing, shields and durability of the enemy). They are not win-rate statistics.");
+    byId("t-f2").textContent = L("Chưa có Zaahen và Locke vì chưa xác minh được bộ chiêu. Đồ khởi đầu và phần thưởng nhiệm vụ vị trí đổi theo mùa nên cần đối chiếu cửa hàng trong game. Số liệu patch lấy từ ghi chú 26.22.", "Zaahen and Locke are missing because their kits are not verified. Starter items and role quest rewards change by season, so check the in-game shop. Patch figures come from the 26.22 notes.");
+    Array.prototype.forEach.call(document.querySelectorAll(".langs button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === lang));
+    });
+  }
+
   function renderFav() {
-    var el = document.getElementById("favs");
+    var el = byId("favs");
     function chip(f, mine) {
-      return '<button type="button" class="fav' + (mine ? " mine" : "") + '" data-n="' + esc(f[0]) + '" data-l="' + f[1] + '" aria-pressed="' + (state.me === f[0] && state.lane === f[1]) + '">' + esc(f[0]) + "<small>" + LANES[f[1]] + "</small></button>";
+      return '<button type="button" class="fav' + (mine ? " mine" : "") + '" data-n="' + esc(f[0]) + '" data-l="' + f[1] + '" aria-pressed="' + (state.me === f[0] && state.lane === f[1]) + '">' + esc(f[0]) + "<small>" + laneName(f[1]) + "</small></button>";
     }
-    el.innerHTML = "<h3>Hay chơi</h3><div class=\"favs\">" + FAV_MAIN.map(function (f) { return chip(f, true); }).join("") +
-      '</div><p class="fav-label">Cùng lối chơi</p><div class="favs">' + FAV_SIM.map(function (f) { return chip(f, false); }).join("") + "</div>";
+    el.innerHTML = "<h3>" + L("Hay chơi", "Your picks") + '</h3><div class="favs">' + FAV_MAIN.map(function (f) { return chip(f, true); }).join("") +
+      '</div><p class="fav-label">' + L("Cùng lối chơi", "Similar playstyle") + '</p><div class="favs">' + FAV_SIM.map(function (f) { return chip(f, false); }).join("") + "</div>";
     Array.prototype.forEach.call(el.querySelectorAll(".fav"), function (b) {
       b.addEventListener("click", function () {
         var n = b.getAttribute("data-n"), l = b.getAttribute("data-l");
@@ -465,9 +528,9 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
   }
 
   function renderLanes() {
-    var el = document.getElementById("lanes");
+    var el = byId("lanes");
     el.innerHTML = Object.keys(LANES).map(function (k) {
-      return '<button type="button" class="lane" data-l="' + k + '" aria-pressed="' + (state.lane === k) + '">' + LANES[k] + "</button>";
+      return '<button type="button" class="lane" data-l="' + k + '" aria-pressed="' + (state.lane === k) + '">' + laneName(k) + "</button>";
     }).join("");
     Array.prototype.forEach.call(el.querySelectorAll("button"), function (b) {
       b.addEventListener("click", function () {
@@ -480,23 +543,23 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
   }
 
   function renderPick(side) {
-    var el = document.getElementById("pick-" + side);
+    var el = byId("pick-" + side);
     var list = laneList();
     var term = q[side].toLowerCase();
     var shown = list.filter(function (c) { return !term || c.n.toLowerCase().indexOf(term) > -1; });
     var cur = state[side];
     el.innerHTML =
-      '<div class="pick-head"><h3>' + (side === "me" ? "Tướng của bạn" : "Tướng đối thủ") + '</h3><span class="sel">' + esc(cur) + " " + mark(cur) + "</span></div>" +
-      '<input type="search" id="q-' + side + '" placeholder="Tìm tướng" autocomplete="off" value="' + esc(q[side]) + '">' +
+      '<div class="pick-head"><h3>' + (side === "me" ? L("Tướng của bạn", "Your champion") : L("Tướng đối thủ", "Enemy champion")) + '</h3><span class="sel">' + esc(cur) + " " + mark(cur) + "</span></div>" +
+      '<input type="search" id="q-' + side + '" placeholder="' + L("Tìm tướng", "Search champion") + '" autocomplete="off" value="' + esc(q[side]) + '">' +
       '<div class="champs">' + (shown.length ? shown.map(function (c) {
         return '<button type="button" class="champ" data-n="' + esc(c.n) + '" aria-pressed="' + (c.n === cur) + '"><span>' + esc(c.n) + "</span>" + mark(c.n) + "</button>";
-      }).join("") : '<span class="note">Không có tướng khớp ở đường này.</span>') + "</div>";
+      }).join("") : '<span class="note">' + L("Không có tướng khớp ở đường này.", "No champion matches in this lane.") + "</span>") + "</div>";
     var inp = el.querySelector("input");
     inp.addEventListener("input", function () {
       q[side] = inp.value;
       var pos = inp.selectionStart;
       renderPick(side);
-      var ni = document.getElementById("q-" + side); ni.focus(); try { ni.setSelectionRange(pos, pos); } catch (e) {}
+      var ni = byId("q-" + side); ni.focus(); try { ni.setSelectionRange(pos, pos); } catch (e) {}
     });
     Array.prototype.forEach.call(el.querySelectorAll(".champ"), function (b) {
       b.addEventListener("click", function () {
@@ -506,7 +569,7 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
     });
   }
 
-  var STATN = ["Sát thương", "Khống chế", "Hồi phục / khiên", "Cơ động", "Tầm đánh", "Độ trâu"];
+  function statNames() { return L(["Sát thương", "Khống chế", "Hồi phục / khiên", "Cơ động", "Tầm đánh", "Độ trâu"], ["Damage", "Crowd control", "Sustain / shields", "Mobility", "Range", "Durability"]); }
   function stats(c) {
     var t = c.t, a = c.a;
     var dmg = (t.assassin || t.burstAP || t.burstAD || a === "mmc" || a === "mmo") ? 3 : (a === "apd" || a === "brs" || a === "spl" || a === "apb" || a === "ona" || a === "jug") ? 2 : 1;
@@ -520,56 +583,64 @@ ul.tips li::before { content: ""; position: absolute; left: 14px; top: 17px; wid
   function pips(n) { return '<span class="pips">' + [1, 2, 3].map(function (i) { return '<i class="' + (i <= n ? "on" : "") + '"></i>'; }).join("") + "</span>"; }
 
   function champBlock(c, who) {
-    var dm = { AD: ["ad", "Sát thương vật lý"], AP: ["ap", "Sát thương phép"], MX: ["mx", "Sát thương hỗn hợp"] }[c.d];
+    var dm = { AD: ["ad", L("Sát thương vật lý", "Physical damage")], AP: ["ap", L("Sát thương phép", "Magic damage")], MX: ["mx", L("Sát thương hỗn hợp", "Mixed damage")] }[c.d];
     var chips = '<span class="chip ' + dm[0] + '">' + dm[1] + "</span>" +
-      Object.keys(c.t).filter(function (t) { return TAGVN[t] && t !== "support" && t !== "ranged"; }).map(function (t) { return '<span class="chip">' + TAGVN[t] + "</span>"; }).join("");
-    var st = stats(c);
-    var rows = STATN.map(function (n, i) { return "<li><span>" + n + "</span>" + pips(st[i]) + "</li>"; }).join("");
-    return '<div class="cb ' + who + '"><div class="cb-top"><span class="hex h-' + dm[0] + '"><span>' + esc(ab(c.n)) + '</span></span><div><div class="who">' + (who === "me" ? "Bạn" : "Đối thủ") + '</div><div class="cn">' + esc(c.n) + " " + mark(c.n) + '</div><div class="cr">' + ARCH[c.a].lb + '</div></div></div><div class="chips">' + chips + '</div><ul class="stats">' + rows + "</ul></div>";
+      Object.keys(c.t).filter(function (t) { return TAGVN[t] && t !== "support" && t !== "ranged"; }).map(function (t) { return '<span class="chip">' + tagName(t) + "</span>"; }).join("");
+    var st = stats(c), names = statNames();
+    var rows = names.map(function (n, i) { return "<li><span>" + n + "</span>" + pips(st[i]) + "</li>"; }).join("");
+    return '<div class="cb ' + who + '"><div class="cb-top"><span class="hex h-' + dm[0] + '"><span>' + esc(ab(c.n)) + '</span></span><div><div class="who">' + (who === "me" ? L("Bạn", "You") : L("Đối thủ", "Enemy")) + '</div><div class="cn">' + esc(c.n) + " " + mark(c.n) + '</div><div class="cr">' + lbName(c.a) + '</div></div></div><div class="chips">' + chips + '</div><ul class="stats">' + rows + "</ul></div>";
   }
-
-  var ITN = { ad: "Sát thương vật lý", ap: "Sức mạnh phép", df: "Phòng thủ", ut: "Hỗ trợ" };
 
   function renderResult() {
     var u = BY[state.me], e = BY[state.foe];
-    var el = document.getElementById("result");
+    var el = byId("result");
     if (!u || !e) { el.innerHTML = ""; return; }
     var b = composeBuild(u, e), bt = boots(u, e);
+    var ITN = { ad: L("Sát thương vật lý", "Physical damage"), ap: L("Sức mạnh phép", "Magic power"), df: L("Phòng thủ", "Defense"), ut: L("Hỗ trợ", "Support") };
 
     var items = b.slots.map(function (s, i) {
       var ty = ITYPE[s.item] || "df";
-      var pn = ITEMPATCH[s.item] ? '<p class="pn">' + esc(ITEMPATCH[s.item]) + "</p>" : "";
+      var ip = itemPatch(s.item);
+      var pn = ip ? '<p class="pn">' + esc(ip) + "</p>" : "";
       return '<li class="step ' + (s.kind === "counter" ? "counter" : "") + '"><div class="s-top"><span class="num">' + (i + 1) + '</span><span class="hex sm t-' + ty + '"><span>' + esc(ab(s.item)) + '</span></span></div><div class="s-name">' + esc(s.item) +
-        '</div><div class="s-badges"><span class="badge ' + (s.kind === "counter" ? "counter" : "") + '">' + (s.kind === "counter" ? "Khắc chế" : "Lõi") + '</span><span class="itype">' + ITN[ty] + "</span></div><p>" + esc(s.reason) + "</p>" + pn + "</li>";
+        '</div><div class="s-badges"><span class="badge ' + (s.kind === "counter" ? "counter" : "") + '">' + (s.kind === "counter" ? L("Khắc chế", "Counter") : L("Lõi", "Core")) + '</span><span class="itype">' + ITN[ty] + "</span></div><p>" + esc(s.reason) + "</p>" + pn + "</li>";
     }).join("");
 
     var pm = [];
     [u, e].forEach(function (c) {
       var p = PATCH[c.n];
-      if (p) pm.push('<div><span class="' + (p[0] === "up" ? "up" : p[0] === "down" ? "down" : "rw") + '">' + esc(c.n) + " " + (p[0] === "up" ? "▲ buff" : p[0] === "down" ? "▼ nerf" : "◆ làm lại") + "</span> " + esc(p[1]) + "</div>");
+      if (p) pm.push('<div><span class="' + (p[0] === "up" ? "up" : p[0] === "down" ? "down" : "rw") + '">' + esc(c.n) + " " + (p[0] === "up" ? "▲ buff" : p[0] === "down" ? "▼ nerf" : L("◆ làm lại", "◆ reworked")) + "</span> " + esc(patchText(c.n)) + "</div>");
     });
-    if (e.n === "Mel") pm.push("<div>Hệ quả khi đánh với Mel: chiêu bay của bạn không còn bị phản lại nữa kể từ 26.22.</div>");
-    var patchHtml = pm.length ? '<div class="sec"><h3>Patch 26.22 liên quan</h3><div class="patchbox">' + pm.join("") + "</div></div>" : "";
+    if (e.n === "Mel") pm.push("<div>" + L("Hệ quả khi đánh với Mel: chiêu bay của bạn không còn bị phản lại nữa kể từ 26.22.", "Against Mel: your projectiles are no longer reflected since 26.22.") + "</div>");
+    var patchHtml = pm.length ? '<div class="sec"><h3>' + L("Patch 26.22 liên quan", "Related patch 26.22 notes") + '</h3><div class="patchbox">' + pm.join("") + "</div></div>" : "";
 
     var rtips = tips(u, e).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
-    var rm = b.removed.length ? '<p class="note">Món lõi mặc định nhường chỗ cho đồ khắc chế: ' + b.removed.map(esc).join(", ") + ". Mua lại nếu trận đã thắng thế.</p>" : "";
+    var rm = b.removed.length ? '<p class="note">' + L("Món lõi mặc định nhường chỗ cho đồ khắc chế: ", "Default core items made room for counter items: ") + b.removed.map(esc).join(", ") + L(". Mua lại nếu trận đã thắng thế.", ". Buy them back if you are ahead.") + "</p>" : "";
 
     var runeTip = [];
-    if (has(e, "poke")) runeTip.push("Cây phụ nên cân nhắc Second Wind nếu bảng rune hiện tại còn có.");
-    if (has(e, "assassin") && u.kind !== "TK") runeTip.push("Cân nhắc rune phòng thủ ở cây phụ để sống qua đợt burst đầu.");
+    if (has(e, "poke")) runeTip.push(L("Cây phụ nên cân nhắc Second Wind nếu bảng rune hiện tại còn có.", "Consider Second Wind in the secondary tree if the current rune page has it."));
+    if (has(e, "assassin") && u.kind !== "TK") runeTip.push(L("Cân nhắc rune phòng thủ ở cây phụ để sống qua đợt burst đầu.", "Consider a defensive secondary rune to survive the first burst."));
 
     el.innerHTML =
-      '<div class="sec"><span class="lane-tag">' + LANE_FULL[state.lane] + '</span><div class="vs-card">' + champBlock(u, "me") + '<div class="vs-mid">VS</div>' + champBlock(e, "foe") + "</div>" +
-      '<p class="note">Thang đo chỉ là ước lượng từ đặc điểm của tướng, không phải số liệu trận đấu.</p></div>' +
-      '<div class="sec"><div class="sec-head"><h3>Đường lên đồ</h3></div><ol class="path">' + items + "</ol>" + rm + "</div>" +
+      '<div class="sec"><span class="lane-tag">' + laneFull(state.lane) + '</span><div class="vs-card">' + champBlock(u, "me") + '<div class="vs-mid">VS</div>' + champBlock(e, "foe") + "</div>" +
+      '<p class="note">' + L("Thang đo chỉ là ước lượng từ đặc điểm của tướng, không phải số liệu trận đấu.", "Bars are estimates from champion traits, not match data.") + "</p></div>" +
+      '<div class="sec"><div class="sec-head"><h3>' + L("Đường lên đồ", "Build path") + '</h3></div><ol class="path">' + items + "</ol>" + rm + "</div>" +
       '<div class="cols">' +
-      '<div class="box"><h3>Giày</h3><div class="big">' + esc(bt[0]) + "</div><p>" + esc(bt[1]) + " " + esc(bt[2]) + "</p></div>" +
-      '<div class="box"><h3>Bảng ngọc</h3><div class="big">' + esc(ARCH[u.a].rune) + "</div><p>" + esc(ARCH[u.a].tree) + (runeTip.length ? ". " + esc(runeTip.join(" ")) : "") + "</p></div>" +
+      '<div class="box"><h3>' + L("Giày", "Boots") + '</h3><div class="big">' + esc(bt[0]) + "</div><p>" + esc(bt[1]) + " " + esc(bt[2]) + "</p></div>" +
+      '<div class="box"><h3>' + L("Bảng ngọc", "Runes") + '</h3><div class="big">' + esc(enx(ARCH[u.a].rune)) + "</div><p>" + esc(enx(ARCH[u.a].tree)) + (runeTip.length ? ". " + esc(runeTip.join(" ")) : "") + "</p></div>" +
       "</div>" +
-      '<div class="sec"><h3>Cách chơi khắc chế</h3><ul class="tips">' + rtips + "</ul></div>" + patchHtml;
+      '<div class="sec"><h3>' + L("Cách chơi khắc chế", "How to play the matchup") + '</h3><ul class="tips">' + rtips + "</ul></div>" + patchHtml;
   }
 
-  function renderAll() { renderFav(); renderLanes(); renderPick("me"); renderPick("foe"); renderResult(); }
+  function renderAll() { renderStatic(); renderFav(); renderLanes(); renderPick("me"); renderPick("foe"); renderResult(); }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".langs button"), function (b) {
+    b.addEventListener("click", function () {
+      lang = b.getAttribute("data-lang");
+      try { localStorage.setItem("lmht-lang", lang); } catch (e) {}
+      renderAll();
+    });
+  });
   renderAll();
 })();
 </script>
