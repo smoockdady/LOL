@@ -1,0 +1,508 @@
+<title>Build Khắc Chế LMHT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600&display=swap">
+<style>
+/* Layout: bảng chọn bên trái (đường, tướng mình, tướng địch), kết quả build bên phải; xếp dọc trên điện thoại */
+:root {
+  --bg: #f1f4f7;
+  --surface: #ffffff;
+  --surface-2: #e8eef3;
+  --fg: #12202c;
+  --muted: #566877;
+  --line: #d5dee6;
+  --accent: #0d6b7c;
+  --accent-fg: #ffffff;
+  --ad: #b83f0c;
+  --ap: #5a44c4;
+  --df: #2c7a4d;
+  --ut: #8f6300;
+  --buff: #1f7a3f;
+  --nerf: #b3261e;
+  --f-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1620; --surface: #132230; --surface-2: #1b2f40; --fg: #e5edf3; --muted: #92a5b5;
+    --line: #25394a; --accent: #4cc2d3; --accent-fg: #06222a;
+    --ad: #ff9a62; --ap: #aa9cff; --df: #6fd19a; --ut: #e2b84b; --buff: #62d58d; --nerf: #ff8f87;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1620; --surface: #132230; --surface-2: #1b2f40; --fg: #e5edf3; --muted: #92a5b5;
+  --line: #25394a; --accent: #4cc2d3; --accent-fg: #06222a;
+  --ad: #ff9a62; --ap: #aa9cff; --df: #6fd19a; --ut: #e2b84b; --buff: #62d58d; --nerf: #ff8f87;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.55;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+h1 { font-size: 34px; line-height: 1.05; }
+h2 { font-size: 22px; }
+h3 { font-size: 16px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px 20px; }
+.top p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+.patch { font-family: var(--f-display); font-size: 15px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 4px; white-space: nowrap; }
+.patch b { color: var(--accent); }
+.main { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.favs { display: flex; flex-wrap: wrap; gap: 4px; }
+.fav-label { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+.fav { font: inherit; font-size: 13px; padding: 5px 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); border-radius: 999px; cursor: pointer; }
+.fav.main { border-color: var(--accent); font-weight: 600; }
+.fav[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.fav:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fav small { opacity: .7; font-size: 11px; }
+.lanes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.lane { font-family: var(--f-display); font-size: 15px; font-weight: 600; letter-spacing: .03em; padding: 8px 2px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); border-radius: 4px; cursor: pointer; line-height: 1.1; }
+.lane[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.lane:focus-visible, .champ:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pick { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pick-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.pick-head .sel { font-family: var(--f-display); font-size: 20px; font-weight: 700; }
+.pick input { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--fg); }
+.champs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 4px; max-height: 188px; overflow-y: auto; padding: 2px; }
+.champ { font: inherit; font-size: 13px; text-align: left; padding: 6px 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; gap: 4px; min-width: 0; }
+.champ span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.champ[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-fg); }
+.mk-b { color: var(--buff); font-size: 11px; } .mk-n { color: var(--nerf); font-size: 11px; } .mk-r { color: var(--ut); font-size: 11px; }
+.champ[aria-pressed="true"] .mk-b, .champ[aria-pressed="true"] .mk-n, .champ[aria-pressed="true"] .mk-r { color: inherit; }
+.vs { font-family: var(--f-display); font-size: 14px; letter-spacing: .2em; color: var(--muted); text-align: center; text-transform: uppercase; }
+.note { color: var(--muted); font-size: 12.5px; }
+.result { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.rh { display: flex; flex-direction: column; gap: 8px; }
+.rh .lane-tag { font-family: var(--f-display); font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); }
+.chip.ad { color: var(--ad); border-color: currentColor; background: transparent; }
+.chip.ap { color: var(--ap); border-color: currentColor; background: transparent; }
+.chip.mx { color: var(--ut); border-color: currentColor; background: transparent; }
+.sec { display: flex; flex-direction: column; gap: 10px; }
+.build { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.item { display: grid; grid-template-columns: 26px 48px minmax(0, 1fr); gap: 12px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+.ord { font-family: var(--f-display); font-size: 22px; font-weight: 700; color: var(--muted); line-height: 48px; text-align: center; font-variant-numeric: tabular-nums; }
+.tile { width: 48px; height: 48px; border-radius: 6px; display: grid; place-items: center; font-family: var(--f-display); font-size: 19px; font-weight: 700; letter-spacing: .02em; border: 1px solid currentColor; }
+.t-ad { color: var(--ad); background: color-mix(in srgb, var(--ad) 14%, var(--surface)); }
+.t-ap { color: var(--ap); background: color-mix(in srgb, var(--ap) 14%, var(--surface)); }
+.t-df { color: var(--df); background: color-mix(in srgb, var(--df) 14%, var(--surface)); }
+.t-ut { color: var(--ut); background: color-mix(in srgb, var(--ut) 14%, var(--surface)); }
+.item .nm { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-weight: 600; font-size: 15px; }
+.badge { font-family: var(--f-display); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
+.badge.counter { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.item p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+.item p.pn { color: var(--fg); }
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 640px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.box .big { font-weight: 600; font-size: 15px; }
+.box p { margin: 0; color: var(--muted); font-size: 13px; }
+ul.tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+ul.tips li { padding-left: 2px; }
+.patchbox { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; display: flex; flex-direction: column; gap: 4px; }
+.up { color: var(--buff); font-weight: 600; } .down { color: var(--nerf); font-weight: 600; } .rw { color: var(--ut); font-weight: 600; }
+.foot { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 4px; }
+@media (prefers-reduced-motion: no-preference) { .item, .box { transition: border-color .15s; } .item:hover { border-color: var(--accent); } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Build Khắc Chế LMHT</h1>
+      <p>Chọn đường, tướng của bạn và tướng đối thủ. Trang tính ra thứ tự lên đồ, giày, bảng ngọc và cách chơi khắc chế.</p>
+    </div>
+    <div class="patch">Patch <b>26.22</b> · live 04/11 · 26.23 dự kiến 18/11</div>
+  </header>
+
+  <div class="main">
+    <section class="panel" aria-label="Chọn đường và tướng">
+      <div class="sec" id="favs"></div>
+      <div class="sec">
+        <h3>Đường</h3>
+        <div class="lanes" id="lanes" role="group" aria-label="Chọn đường"></div>
+      </div>
+      <div class="pick" id="pick-me"></div>
+      <div class="vs">đấu với</div>
+      <div class="pick" id="pick-foe"></div>
+      <p class="note">▲ buff, ▼ nerf, ◆ làm lại ở patch 26.22.</p>
+    </section>
+
+    <section class="result" id="result" aria-live="polite"></section>
+  </div>
+
+  <footer class="foot">
+    <span>Gợi ý được tính theo luật khắc chế (loại sát thương, khống chế, hồi máu, lá chắn, độ trâu của đối thủ). Đây không phải thống kê tỉ lệ thắng.</span>
+    <span>Chưa có Zaahen và Locke vì chưa xác minh được bộ chiêu. Đồ khởi đầu và phần thưởng nhiệm vụ vị trí đổi theo mùa nên cần đối chiếu cửa hàng trong game. Số liệu patch lấy từ ghi chú 26.22.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var LANES = { T: "Trên", J: "Rừng", M: "Giữa", B: "Dưới", S: "Hỗ trợ" };
+  var LANE_FULL = { T: "Đường trên", J: "Đi rừng", M: "Đường giữa", B: "Đường dưới (xạ thủ)", S: "Hỗ trợ" };
+  var DEF = { T: ["Mordekaiser", "Aatrox"], J: ["Viego", "Warwick"], M: ["Viktor", "Zed"], B: ["Jinx", "Caitlyn"], S: ["Nami", "Leona"] };
+
+  var ARCH = {
+    apm: { lb: "Pháp sư burst", tags: ["burstAP", "ranged"], boots: "Sorcerer's Shoes", rune: "Electrocute (burst) hoặc Arcane Comet (đánh rỉa)", tree: "Domination hoặc Sorcery",
+      core: ["Luden's Companion", "Shadowflame", "Rabadon's Deathcap", "Zhonya's Hourglass", "Void Staff"] },
+    apd: { lb: "Pháp sư kiểm soát", tags: ["ranged"], boots: "Sorcerer's Shoes", rune: "Arcane Comet hoặc Phase Rush", tree: "Sorcery + Inspiration",
+      core: ["Liandry's Torment", "Cryptbloom", "Zhonya's Hourglass", "Rabadon's Deathcap", "Rylai's Crystal Scepter"] },
+    apa: { lb: "Sát thủ phép", tags: ["assassin", "burstAP", "dash"], boots: "Sorcerer's Shoes", rune: "Electrocute hoặc Dark Harvest", tree: "Domination + Sorcery",
+      core: ["Lich Bane", "Shadowflame", "Rabadon's Deathcap", "Zhonya's Hourglass", "Void Staff"] },
+    ada: { lb: "Sát thủ vật lý", tags: ["assassin", "burstAD", "dash"], boots: "Ionian Boots of Lucidity", rune: "Electrocute hoặc Hail of Blades", tree: "Domination + Sorcery",
+      core: ["Youmuu's Ghostblade", "Voltaic Cyclosword", "Serylda's Grudge", "Edge of Night", "Guardian Angel"] },
+    mmc: { lb: "Xạ thủ chí mạng", tags: ["crit", "ranged", "hyper"], boots: "Berserker's Greaves", rune: "Lethal Tempo hoặc Fleet Footwork", tree: "Precision + Sorcery",
+      core: ["Yun Tal Wildarrows", "Infinity Edge", "Phantom Dancer", "Lord Dominik's Regard", "Bloodthirster"] },
+    mmo: { lb: "Xạ thủ đánh kèm", tags: ["onhit", "ranged", "hyper"], boots: "Berserker's Greaves", rune: "Lethal Tempo", tree: "Precision + Resolve",
+      core: ["Kraken Slayer", "Blade of the Ruined King", "Terminus", "Guinsoo's Rageblade", "Guardian Angel"] },
+    brs: { lb: "Đấu sĩ AD", tags: ["fighter"], boots: "Plated Steelcaps", rune: "Conqueror", tree: "Precision + Resolve",
+      core: ["Trinity Force", "Black Cleaver", "Sterak's Gage", "Death's Dance", "Spirit Visage"] },
+    jug: { lb: "Hộ pháp", tags: ["fighter"], boots: "Plated Steelcaps", rune: "Conqueror hoặc Phase Rush", tree: "Precision + Resolve",
+      core: ["Sundered Sky", "Overlord's Bloodmail", "Sterak's Gage", "Death's Dance", "Spirit Visage"] },
+    spl: { lb: "Đấu sĩ đẩy đường", tags: ["fighter", "splitter"], boots: "Plated Steelcaps", rune: "Conqueror hoặc Grasp of the Undying", tree: "Precision + Resolve",
+      core: ["Bastionbreaker", "Trinity Force", "Sterak's Gage", "Death's Dance", "Guardian Angel"] },
+    tnk: { lb: "Đỡ đòn", tags: ["tank"], boots: "Plated Steelcaps", rune: "Grasp of the Undying hoặc Aftershock", tree: "Resolve + Inspiration",
+      core: ["Sunfire Aegis", "Jak'Sho, The Protean", "Kaenic Rookern", "Thornmail", "Warmog's Armor"] },
+    apb: { lb: "Đấu sĩ AP", tags: ["fighter"], boots: "Sorcerer's Shoes", rune: "Phase Rush hoặc Electrocute", tree: "Sorcery + Inspiration",
+      core: ["Liandry's Torment", "Riftmaker", "Rabadon's Deathcap", "Zhonya's Hourglass", "Void Staff"] },
+    ent: { lb: "Hỗ trợ buff", tags: ["support"], boots: "Ionian Boots of Lucidity", rune: "Summon Aery hoặc Guardian", tree: "Sorcery + Inspiration",
+      core: ["Moonstone Renewer", "Staff of Flowing Water", "Ardent Censer", "Redemption", "Mikael's Blessing"] },
+    eng: { lb: "Hỗ trợ khởi tranh", tags: ["tank", "cc", "support"], boots: "Plated Steelcaps", rune: "Aftershock hoặc Guardian", tree: "Resolve + Inspiration",
+      core: ["Locket of the Iron Solari", "Zeke's Convergence", "Knight's Vow", "Redemption", "Thornmail"] },
+    mgs: { lb: "Hỗ trợ pháp sư", tags: ["ranged", "support"], boots: "Sorcerer's Shoes", rune: "Summon Aery hoặc Arcane Comet", tree: "Sorcery + Inspiration",
+      core: ["Imperial Mandate", "Shadowflame", "Zhonya's Hourglass", "Banshee's Veil", "Morellonomicon"] },
+    ona: { lb: "Đấu sĩ đánh kèm", tags: ["fighter", "onhit"], boots: "Berserker's Greaves", rune: "Lethal Tempo", tree: "Precision + Resolve",
+      core: ["Kraken Slayer", "Blade of the Ruined King", "Guinsoo's Rageblade", "Wit's End", "Guardian Angel"] }
+  };
+
+  // [tên, đường, loại sát thương, kiểu, tag thêm]
+  var R = [
+    ["Aatrox","T","AD","brs","heal,cc"],["Camille","T","AD","spl","dash,cc,hardcc"],["Cho'Gath","TMJ","AP","apb","tank,cc,hardcc,heal"],["Darius","T","AD","jug","cc"],["Fiora","T","AD","spl",""],
+    ["Garen","T","AD","jug",""],["Gnar","T","AD","brs","cc,poke,ranged"],["Illaoi","T","AD","jug",""],["Irelia","T","AD","brs","dash,heal,cc"],
+    ["Jax","T","MX","spl","cc,hardcc"],["Kayle","T","AP","apb","ranged,onhit,hyper"],["Malphite","T","AP","tnk","cc,hardcc,armor"],["Maokai","TJ","AP","tnk","cc,hardcc"],
+    ["Mordekaiser","T","AP","apb","shield,cc,hardcc"],["Ornn","T","AD","tnk","cc,hardcc"],["Renekton","T","AD","brs","heal,cc,hardcc"],["Riven","T","AD","brs","dash,shield,cc"],
+    ["Rumble","TM","AP","apb","cc,poke,ranged"],["Sett","T","AD","jug","shield,cc,hardcc"],["Shen","TJ","AD","tnk","cc,shield"],["Sion","T","AD","tnk","cc,hardcc,heal"],
+    ["Teemo","T","AP","apd","poke,onhit,ranged"],["Volibear","T","AD","brs","cc,hardcc"],["Urgot","T","AD","jug","cc,hardcc,heal"],["Gwen","T","AP","apb","heal"],
+    ["Yasuo","TM","AD","mmc","dash,shield,fighter"],["Yone","TM","AD","mmc","dash,fighter"],
+    ["Ahri","M","AP","apm","dash,cc"],["Akali","M","AP","apa","shield"],["Anivia","M","AP","apd","cc,hardcc,poke"],["Annie","M","AP","apm","cc,hardcc"],
+    ["Aurelion Sol","M","AP","apd","cc,poke"],["Azir","M","AP","apd","cc,hardcc"],["Cassiopeia","M","AP","apd","cc,hardcc,poke"],["Fizz","M","AP","apa","cc"],
+    ["Hwei","M","AP","apm","poke,cc"],["Katarina","M","AP","apa","dash"],["LeBlanc","M","AP","apa","cc"],["Lux","MS","AP","apm","poke,cc,hardcc,shield"],
+    ["Malzahar","M","AP","apd","cc,hardcc,shield"],["Mel","M","AP","apm","poke,shield"],["Naafiri","M","AD","ada","heal"],["Orianna","M","AP","apm","cc,hardcc,shield"],
+    ["Sylas","MJ","AP","apa","heal,shield,cc"],["Syndra","M","AP","apm","cc,hardcc"],["Talon","M","AD","ada",""],["Viktor","M","AP","apm","poke,cc"],
+    ["Veigar","M","AP","apm","cc,hardcc,hyper"],["Vex","M","AP","apm","cc,hardcc,shield"],["Xerath","M","AP","apm","poke,cc,hardcc"],["Zed","M","AD","ada","shield"],
+    ["Corki","MB","MX","mmc","poke"],
+    ["Aphelios","B","AD","mmc",""],["Ashe","B","AD","mmo","cc,hardcc,poke"],["Caitlyn","B","AD","mmc","poke,cc"],["Draven","B","AD","mmc",""],
+    ["Ezreal","B","MX","mmc","poke,dash"],["Jhin","B","AD","mmc","cc,poke"],["Jinx","B","AD","mmc","cc"],["Kai'Sa","B","MX","mmo","dash"],
+    ["Kog'Maw","B","MX","mmo","poke"],["Lucian","B","AD","mmc","dash"],["Miss Fortune","B","AD","mmc","cc"],["Nilah","B","AD","mmc","dash,heal,melee"],
+    ["Samira","B","AD","mmc","dash,shield,heal"],["Sivir","B","AD","mmc","shield,poke"],["Smolder","B","AD","mmc","hyper"],["Tristana","B","AD","mmc","dash,cc"],
+    ["Twitch","B","AD","mmo","hyper,assassin"],["Varus","B","AD","mmc","cc,hardcc,poke"],["Vayne","B","AD","mmo","dash,trueDmg"],["Xayah","B","AD","mmc","cc,shield"],
+    ["Zeri","B","AD","mmc","dash,hyper"],["Senna","BS","AD","mmc","poke,heal,cc"],
+    ["Alistar","S","AP","eng","hardcc,heal"],["Blitzcrank","S","AP","eng","hardcc"],["Braum","S","AD","eng","hardcc,shield"],["Janna","S","AP","ent","shield,cc,hardcc,heal"],
+    ["Karma","S","AP","mgs","shield,cc,poke"],["Leona","S","AD","eng","hardcc"],["Lulu","S","AP","ent","shield,cc,hardcc,heal"],["Milio","S","AP","ent","shield,heal"],
+    ["Morgana","S","AP","mgs","shield,cc,hardcc,poke"],["Nami","S","AP","ent","cc,hardcc,heal"],["Nautilus","S","AD","eng","hardcc"],["Pyke","S","AD","ada","dash,hardcc"],
+    ["Rakan","S","AP","eng","cc,hardcc,shield"],["Rell","S","AD","eng","hardcc"],["Renata Glasc","S","AP","ent","cc,hardcc,shield"],["Seraphine","S","AP","mgs","shield,cc,hardcc,heal,poke"],
+    ["Soraka","S","AP","ent","heal,shield"],["Thresh","S","AP","eng","hardcc,shield"],["Yuumi","S","AP","ent","heal,shield"],["Zyra","S","AP","mgs","cc,hardcc,poke"],
+    ["Amumu","J","AP","tnk","cc,hardcc"],["Briar","J","AD","brs","heal,cc,hardcc,dash"],["Diana","J","AP","apb","dash,cc,burstAP"],["Elise","J","AP","apa","cc,hardcc,burstAP"],
+    ["Evelynn","J","AP","apa","burstAP"],["Fiddlesticks","J","AP","apd","hardcc,heal,burstAP"],["Graves","J","AD","mmc","shield"],["Hecarim","J","AD","brs","dash,cc"],
+    ["Jarvan IV","J","AD","brs","cc,hardcc,dash"],["Kayn","J","AD","ada","heal,dash"],["Kha'Zix","J","AD","ada",""],["Lee Sin","J","AD","brs","dash,cc,shield"],
+    ["Master Yi","J","AD","ona","dash,hyper,assassin"],["Nocturne","J","AD","ada","cc,shield"],["Nunu","J","AP","tnk","cc,hardcc"],["Rammus","J","AP","tnk","hardcc,armor"],
+    ["Rek'Sai","J","AD","brs","cc,hardcc"],["Sejuani","J","AP","tnk","cc,hardcc"],["Viego","J","AD","brs","heal,dash"],["Vi","J","AD","brs","hardcc,cc"],
+    ["Warwick","J","AD","brs","heal,cc,hardcc"],["Zac","J","AP","tnk","cc,hardcc,heal"]
+  ];
+
+  var OVR = {
+    "Kayle": ["Nashor's Tooth", "Guinsoo's Rageblade", "Rabadon's Deathcap", "Zhonya's Hourglass", "Void Staff"],
+    "Ezreal": ["Trinity Force", "Muramana", "Black Cleaver", "Serylda's Grudge", "Guardian Angel"],
+    "Yasuo": ["Yun Tal Wildarrows", "Infinity Edge", "Phantom Dancer", "Immortal Shieldbow", "Guardian Angel"],
+    "Yone": ["Yun Tal Wildarrows", "Infinity Edge", "Immortal Shieldbow", "Lord Dominik's Regard", "Guardian Angel"],
+    "Cho'Gath": ["Liandry's Torment", "Riftmaker", "Spirit Visage", "Zhonya's Hourglass", "Void Staff"],
+    "Teemo": ["Liandry's Torment", "Nashor's Tooth", "Zhonya's Hourglass", "Rabadon's Deathcap", "Void Staff"]
+  };
+
+  var PATCH = {
+    "Aurelion Sol": ["up", "E tăng sát thương tổng và hệ số AP lên 60 đến 80%."],
+    "Corki": ["up", "R tăng sát thương, Big One tăng hệ số AD thưởng lên 180%."],
+    "Kayle": ["up", "Hồi chiêu Q và R giảm, mạnh hơn ở đầu trận."],
+    "Maokai": ["up", "Q gây thêm sát thương theo % máu tối đa."],
+    "Naafiri": ["up", "Q hồi máu nhiều hơn, W tăng AD lên 22%."],
+    "Rumble": ["up", "R tăng hệ số AP."],
+    "Shen": ["up", "Q tăng sát thương lên quái rừng."],
+    "Smolder": ["up", "W tăng sát thương nổ. Doran's Bow bị giảm 1 AD nên ảnh hưởng nhẹ."],
+    "Viktor": ["up", "Máu mỗi cấp 100 lên 105, R tăng hệ số AP lên 60%."],
+    "Yasuo": ["down", "Q giảm hệ số AD tổng từ 105% xuống 100%. Bản build chí mạng bị ảnh hưởng."],
+    "Thresh": ["down", "AD gốc 56 xuống 54, R giảm từ 250/400/550 xuống 200/350/500."],
+    "Mel": ["rw", "Làm lại giữa phiên bản. W không còn phản đạn, chỉ phá đạn và gây ít sát thương. Máu đầu trận giảm, sức mạnh dời về cuối trận. Q hoàn lại một phần hồi chiêu khi trúng tướng."]
+  };
+  var ITEMPATCH = {
+    "Overlord's Bloodmail": "Patch 26.22 buff: AD 30 lên 40, Retribution tối đa 12% giảm còn 10% AD tổng.",
+    "Bastionbreaker": "Được ghi nhận mạnh với đấu sĩ đẩy đường ở patch 26.15. Kiểm tra lại giá và chỉ số trong shop.",
+    "Yun Tal Wildarrows": "Món chí mạng thay cho các món cũ ở mùa 2026. Kiểm tra giá hiện tại trong shop."
+  };
+
+  var TAGVN = { assassin: "Sát thủ", poke: "Đánh rỉa", cc: "Có khống chế", hardcc: "CC cứng", heal: "Hồi máu", shield: "Lá chắn",
+    dash: "Cơ động", hyper: "Mạnh về cuối", tank: "Trâu", crit: "Chí mạng", onhit: "Đánh kèm", fighter: "Đấu sĩ", splitter: "Đẩy đường",
+    ranged: "Tầm xa", burstAP: "Burst phép", burstAD: "Burst vật lý", armor: "Giáp dày", trueDmg: "Sát thương chuẩn", support: "Hỗ trợ" };
+
+  var ITYPE = {};
+  function reg(t, arr) { arr.forEach(function (n) { ITYPE[n] = t; }); }
+  reg("ad", ["Youmuu's Ghostblade","Voltaic Cyclosword","Serylda's Grudge","Edge of Night","Guardian Angel","Yun Tal Wildarrows","Infinity Edge","Phantom Dancer","Lord Dominik's Regard","Bloodthirster","Kraken Slayer","Blade of the Ruined King","Terminus","Guinsoo's Rageblade","Trinity Force","Black Cleaver","Sterak's Gage","Death's Dance","Sundered Sky","Overlord's Bloodmail","Bastionbreaker","Mortal Reminder","Chempunk Chainsword","Maw of Malmortius","Silvermere Dawn","Serpent's Fang","Muramana","Immortal Shieldbow","Wit's End"]);
+  reg("ap", ["Luden's Companion","Shadowflame","Rabadon's Deathcap","Zhonya's Hourglass","Void Staff","Liandry's Torment","Cryptbloom","Rylai's Crystal Scepter","Lich Bane","Riftmaker","Morellonomicon","Nashor's Tooth","Imperial Mandate","Banshee's Veil"]);
+  reg("df", ["Spirit Visage","Sunfire Aegis","Jak'Sho, The Protean","Kaenic Rookern","Thornmail","Warmog's Armor","Force of Nature","Frozen Heart","Randuin's Omen","Locket of the Iron Solari","Zeke's Convergence","Knight's Vow"]);
+  reg("ut", ["Moonstone Renewer","Staff of Flowing Water","Ardent Censer","Redemption","Mikael's Blessing"]);
+
+  var CH = R.map(function (r) {
+    var a = ARCH[r[3]];
+    var tg = {};
+    a.tags.concat(r[4] ? r[4].split(",") : []).forEach(function (t) { if (t) tg[t] = 1; });
+    var kind = (r[3] === "tnk" || r[3] === "eng") ? "TK" : (r[3] === "ent" ? "EN" : (r[2] === "AP" ? "AP" : "AD"));
+    return { n: r[0], l: r[1], d: r[2], a: r[3], t: tg, kind: kind, core: OVR[r[0]] || a.core };
+  });
+  var BY = {};
+  CH.forEach(function (c) { BY[c.n] = c; });
+
+  var state = { lane: "M", me: "Viktor", foe: "Zed" };
+  try {
+    var s = JSON.parse(localStorage.getItem("lmht-build") || "null");
+    if (s && BY[s.me] && BY[s.foe] && BY[s.me].l.indexOf(s.lane) > -1 && BY[s.foe].l.indexOf(s.lane) > -1) state = s;
+  } catch (e) {}
+  var q = { me: "", foe: "" };
+
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function ab(n) {
+    var w = n.replace(/[,']/g, " ").split(/\s+/).filter(function (x) { return x && !/^(of|the)$/i.test(x); });
+    return (w[0][0] + (w[1] ? w[1][0] : (w[0][1] || ""))).toUpperCase();
+  }
+  function mark(n) {
+    var p = PATCH[n];
+    if (!p) return "";
+    return p[0] === "up" ? '<span class="mk-b" title="Buff 26.22">▲</span>' : p[0] === "down" ? '<span class="mk-n" title="Nerf 26.22">▼</span>' : '<span class="mk-r" title="Làm lại 26.22">◆</span>';
+  }
+  function save() { try { localStorage.setItem("lmht-build", JSON.stringify(state)); } catch (e) {} }
+
+  function laneList() { return CH.filter(function (c) { return c.l.indexOf(state.lane) > -1; }).sort(function (a, b) { return a.n.localeCompare(b.n); }); }
+
+  function renderLanes() {
+    var el = document.getElementById("lanes");
+    el.innerHTML = Object.keys(LANES).map(function (k) {
+      return '<button type="button" class="lane" data-l="' + k + '" aria-pressed="' + (state.lane === k) + '">' + LANES[k] + "</button>";
+    }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () {
+        state.lane = b.getAttribute("data-l");
+        state.me = DEF[state.lane][0]; state.foe = DEF[state.lane][1];
+        q.me = ""; q.foe = "";
+        save(); renderAll();
+      });
+    });
+  }
+
+  function renderPick(side) {
+    var el = document.getElementById("pick-" + (side === "me" ? "me" : "foe"));
+    var list = laneList();
+    var term = q[side].toLowerCase();
+    var shown = list.filter(function (c) { return !term || c.n.toLowerCase().indexOf(term) > -1; });
+    var cur = state[side];
+    el.innerHTML =
+      '<div class="pick-head"><h3>' + (side === "me" ? "Tướng của bạn" : "Tướng đối thủ") + '</h3><span class="sel">' + esc(cur) + " " + mark(cur) + "</span></div>" +
+      '<input type="search" id="q-' + side + '" placeholder="Tìm tướng" autocomplete="off" value="' + esc(q[side]) + '">' +
+      '<div class="champs">' + (shown.length ? shown.map(function (c) {
+        return '<button type="button" class="champ" data-n="' + esc(c.n) + '" aria-pressed="' + (c.n === cur) + '"><span>' + esc(c.n) + "</span>" + mark(c.n) + "</button>";
+      }).join("") : '<span class="note">Không có tướng khớp ở đường này.</span>') + "</div>";
+    var inp = el.querySelector("input");
+    inp.addEventListener("input", function () {
+      q[side] = inp.value;
+      var pos = inp.selectionStart;
+      renderPick(side);
+      var ni = document.getElementById("q-" + side); ni.focus(); try { ni.setSelectionRange(pos, pos); } catch (e) {}
+    });
+    Array.prototype.forEach.call(el.querySelectorAll(".champ"), function (b) {
+      b.addEventListener("click", function () {
+        state[side] = b.getAttribute("data-n");
+        save(); renderPick(side); renderResult(); renderFav();
+      });
+    });
+  }
+
+  function has(c, t) { return !!c.t[t]; }
+
+  function compute(u, e) {
+    var rules = [];
+    function add(item, reason, pri) { rules.push({ item: item, reason: reason, pri: pri }); }
+    var k = u.kind, mk = (u.a === "mmc" || u.a === "mmo");
+
+    if (has(e, "heal")) {
+      if (k === "AD") {
+        if (mk) add("Mortal Reminder", e.n + " hồi máu nhiều. Mortal Reminder vừa xuyên giáp vừa cắt hồi máu cho xạ thủ. Mua Executioner's Calling sớm khi cần.", 10);
+        else add("Chempunk Chainsword", e.n + " hồi máu nhiều. Chempunk Chainsword cắt hồi máu mà không bỏ sát thương vật lý. Mua Executioner's Calling sớm khi cần.", 10);
+      } else if (k === "AP") add("Morellonomicon", e.n + " hồi máu nhiều. Morellonomicon cắt hồi máu và tăng sát thương phép. Mua Oblivion Orb sớm khi cần.", 10);
+      else if (k === "TK" && e.d === "AD") add("Thornmail", e.n + " hồi máu và đánh thường là nguồn sát thương chính. Thornmail phản lại và cắt hồi máu khi bị đánh.", 10);
+    }
+    if (has(e, "tank") || has(e, "armor")) {
+      if (k === "AD") {
+        if (u.a === "mmc") add("Lord Dominik's Regard", e.n + " có nhiều máu và giáp. Lord Dominik's xuyên giáp và gây thêm sát thương lên mục tiêu máu dày.", 8);
+        else if (u.a === "mmo" || u.a === "ona") add("Blade of the Ruined King", e.n + " có nhiều máu. Blade of the Ruined King gây sát thương theo % máu hiện tại.", 8);
+        else add("Black Cleaver", e.n + " dày máu và giáp. Black Cleaver bào giáp và gây sát thương theo cộng dồn.", 8);
+      } else if (k === "AP") {
+        add("Liandry's Torment", e.n + " nhiều máu. Liandry's gây sát thương theo % máu tối đa.", 8);
+        add("Void Staff", e.n + " có kháng phép dày. Void Staff xuyên 40% kháng phép.", 6);
+      }
+    }
+    if (e.d === "AD" && (has(e, "assassin") || has(e, "burstAD"))) {
+      if (k === "AP") add("Zhonya's Hourglass", e.n + " là sát thủ vật lý. Zhonya's cho giáp và bấm dừng thời gian để né bộ combo.", 9);
+      else if (mk) add("Guardian Angel", e.n + " lao vào cắt mục tiêu. Guardian Angel cho một mạng thứ hai trong giao tranh.", 8);
+      else if (k === "AD") add("Death's Dance", e.n + " burst nhanh. Death's Dance trì hoãn sát thương nhận vào và hồi lại khi hạ mục tiêu.", 8);
+      else if (k === "TK") add("Frozen Heart", e.n + " dựa vào đánh thường và chiêu vật lý. Frozen Heart cho giáp dày và làm chậm tốc đánh.", 7);
+      else if (k === "EN") add("Locket of the Iron Solari", e.n + " burst vật lý. Locket tạo lá chắn cho cả đội trước đợt lao vào.", 7);
+    }
+    if (e.d === "AP" && (has(e, "assassin") || has(e, "burstAP"))) {
+      if (k === "AP" || k === "EN") add("Banshee's Veil", e.n + " burst phép. Banshee's Veil chặn một chiêu và cho kháng phép.", 9);
+      else if (u.a === "ada") add("Edge of Night", e.n + " burst phép. Edge of Night chặn một chiêu đầu và tăng khả năng chống combo.", 8);
+      else if (k === "AD") add("Maw of Malmortius", e.n + " gây sát thương phép lớn. Maw tạo lá chắn khi máu xuống thấp và cho kháng phép.", 8);
+      else if (k === "TK") add("Force of Nature", e.n + " gây sát thương phép. Force of Nature cho kháng phép và tốc độ chạy.", 8);
+    }
+    if (has(e, "hardcc") || has(e, "cc")) {
+      var p = has(e, "hardcc") ? 7 : 5;
+      if (u.a === "ent") add("Mikael's Blessing", e.n + " có khống chế. Mikael's giải CC cho đồng đội.", p + 1);
+      else if (mk) add("Silvermere Dawn", e.n + " có khống chế. Silvermere Dawn xóa hiệu ứng khống chế khi kích hoạt.", p);
+      else if (k === "AD" && u.a !== "ada") add("Silvermere Dawn", e.n + " có khống chế. Silvermere Dawn xóa hiệu ứng khống chế khi kích hoạt.", p);
+      else if (u.a === "ada") add("Edge of Night", e.n + " có khống chế. Edge of Night chặn chiêu đầu tiên khi bị khóa mục tiêu.", p);
+      else if (k === "AP") add("Banshee's Veil", e.n + " có khống chế. Banshee's Veil chặn chiêu khống chế đầu tiên.", p);
+    }
+    if (has(e, "dash") && has(e, "assassin")) {
+      if (k === "AP" && u.a !== "apd") add("Rylai's Crystal Scepter", e.n + " cơ động. Rylai's làm chậm để giữ mục tiêu trong tầm.", 6);
+      if (k === "AD" && u.a !== "ada" && !mk) add("Serylda's Grudge", e.n + " cơ động. Serylda's làm chậm và xuyên giáp.", 6);
+    }
+    if (u.a === "ada" && has(e, "shield")) add("Serpent's Fang", e.n + " có lá chắn. Serpent's Fang giảm sức mạnh lá chắn của mục tiêu.", 7);
+    if ((has(e, "crit") || has(e, "onhit")) && k === "TK") add("Randuin's Omen", e.n + " dựa vào đánh thường. Randuin's giảm sát thương chí mạng và làm chậm khi kích hoạt.", 7);
+    if (has(e, "poke") && e.d === "AP" && k === "AP") add("Banshee's Veil", e.n + " đánh rỉa bằng phép. Banshee's Veil chặn chiêu rỉa đầu tiên.", 5);
+    if (has(e, "poke") && k === "AD" && !mk) add("Spirit Visage", e.n + " đánh rỉa liên tục. Spirit Visage tăng hồi máu và kháng phép.", 5);
+
+    var seen = {}, out = [];
+    rules.sort(function (a, b) { return b.pri - a.pri; }).forEach(function (r) { if (!seen[r.item]) { seen[r.item] = 1; out.push(r); } });
+    return out;
+  }
+
+  function boots(u, e) {
+    var hard = has(e, "hardcc");
+    if (e.d === "AP" || hard) return ["Mercury's Treads", e.d === "AP" ? e.n + " gây sát thương phép." : e.n + " có CC cứng.", "Kháng phép và giảm thời gian bị khống chế."];
+    if (e.d === "AD" && (has(e, "assassin") || has(e, "fighter") || has(e, "crit") || has(e, "onhit"))) return ["Plated Steelcaps", e.n + " gây sát thương bằng đánh thường.", "Giáp và giảm sát thương từ đòn đánh thường."];
+    return [ARCH[u.a].boots, "Không có mối đe dọa nào đòi đổi giày.", "Dùng giày mặc định của kiểu tướng."];
+  }
+
+  function tips(u, e) {
+    var t = [];
+    var squishy = (u.kind === "AP" || u.kind === "EN" || u.a === "mmc" || u.a === "mmo");
+    if (has(e, "assassin") && squishy) t.push("Giữ kỹ năng thoát thân và Tốc biến cho " + e.n + ". Đặt mắt ở bụi cỏ hai bên và đứng gần lính hoặc đồng đội.");
+    if (has(e, "poke")) t.push(e.n + " đánh rỉa tầm xa. Đừng đứng yên trong tầm, trade khi chiêu của họ đang hồi.");
+    if (has(e, "hardcc")) t.push("Chờ " + e.n + " dùng chiêu khống chế rồi mới giao tranh. Đứng sau lính để chặn chiêu bay.");
+    if (has(e, "hyper")) t.push(e.n + " mạnh hơn về cuối. Ép nhịp bằng mục tiêu sớm thay vì kéo dài trận.");
+    if (has(e, "splitter")) t.push(e.n + " thích đẩy đường 1 đấu 1. Cần ward cánh và đồng đội phản ứng nhanh.");
+    if (has(e, "tank")) t.push("Đối thủ dày máu. Ưu tiên sát thương xuyên giáp, theo % máu hoặc kéo dài như Liandry's, Black Cleaver.");
+    if (has(e, "heal")) t.push("Mua đồ cắt hồi máu sau khi " + e.n + " có món lõi đầu tiên, không nên mua quá muộn.");
+    if (has(e, "shield")) t.push(e.n + " có lá chắn. Đánh sau khi lá chắn vỡ thay vì xả chiêu ngay.");
+    if (has(e, "dash") && !has(e, "assassin")) t.push(e.n + " có kỹ năng lao. Giữ chiêu làm chậm hoặc khống chế để trả lời.");
+    if (!t.length) t.push("Không có điểm cần đổi lớn. Chơi theo kế hoạch đồ mặc định của " + u.n + " và theo dõi món đồ đầu tiên của " + e.n + ".");
+    return t.slice(0, 5);
+  }
+
+  function composeBuild(u, e) {
+    var core = u.core.slice(), cnt = compute(u, e), slots = [];
+    function inCore(n) { return core.indexOf(n) > -1; }
+    var picks = [];
+    cnt.forEach(function (r) { if (picks.length < 3) picks.push(r); });
+    var first = core[0];
+    if (picks.length && picks[0].pri >= 9 && picks[0].item === first) first = null;
+    slots.push({ item: core[0], kind: "core", reason: "Món lõi của " + u.n + " (" + ARCH[u.a].lb + ")." });
+    var urgent = picks.length && picks[0].pri >= 9 ? picks.shift() : null;
+    function pushCounter(r) {
+      if (slots.some(function (s) { return s.item === r.item; })) return;
+      slots.push({ item: r.item, kind: "counter", reason: r.reason });
+    }
+    if (urgent) pushCounter(urgent);
+    if (core[1] && !slots.some(function (s) { return s.item === core[1]; })) slots.push({ item: core[1], kind: "core", reason: "Món lõi tiếp theo của " + u.n + "." });
+    picks.forEach(pushCounter);
+    core.slice(2).forEach(function (n) {
+      if (slots.length < 5 && !slots.some(function (s) { return s.item === n; })) slots.push({ item: n, kind: "core", reason: "Món hoàn thiện kiểu tướng." });
+    });
+    slots = slots.slice(0, 5);
+    var removed = core.filter(function (n) { return !slots.some(function (s) { return s.item === n; }); });
+    return { slots: slots, removed: removed };
+  }
+
+  function renderResult() {
+    var u = BY[state.me], e = BY[state.foe];
+    var el = document.getElementById("result");
+    if (!u || !e) { el.innerHTML = ""; return; }
+    var b = composeBuild(u, e), bt = boots(u, e);
+    var dm = { AD: ["ad", "Sát thương vật lý"], AP: ["ap", "Sát thương phép"], MX: ["mx", "Sát thương hỗn hợp"] }[e.d];
+    var chips = '<span class="chip ' + dm[0] + '">' + dm[1] + '</span><span class="chip">' + ARCH[e.a].lb + "</span>" +
+      Object.keys(e.t).filter(function (t) { return TAGVN[t] && t !== "support" && t !== "ranged"; }).map(function (t) { return '<span class="chip">' + TAGVN[t] + "</span>"; }).join("");
+
+    var items = b.slots.map(function (s, i) {
+      var ty = ITYPE[s.item] || "df";
+      var pn = ITEMPATCH[s.item] ? '<p class="pn">' + esc(ITEMPATCH[s.item]) + "</p>" : "";
+      return '<li class="item"><span class="ord">' + (i + 1) + '</span><span class="tile t-' + ty + '" aria-hidden="true">' + esc(ab(s.item)) + '</span><div><div class="nm">' + esc(s.item) +
+        '<span class="badge ' + (s.kind === "counter" ? "counter" : "") + '">' + (s.kind === "counter" ? "Khắc chế" : "Lõi") + "</span></div><p>" + esc(s.reason) + "</p>" + pn + "</div></li>";
+    }).join("");
+
+    var pm = [];
+    [u, e].forEach(function (c) {
+      var p = PATCH[c.n];
+      if (p) pm.push('<div><span class="' + (p[0] === "up" ? "up" : p[0] === "down" ? "down" : "rw") + '">' + esc(c.n) + " " + (p[0] === "up" ? "▲ buff" : p[0] === "down" ? "▼ nerf" : "◆ làm lại") + "</span> " + esc(p[1]) + "</div>");
+    });
+    if (e.n === "Mel") pm.push("<div>Hệ quả khi đánh với Mel: chiêu bay của bạn không còn bị phản lại nữa kể từ 26.22.</div>");
+    var patchHtml = pm.length ? '<div class="sec"><h3>Patch 26.22 liên quan</h3><div class="patchbox">' + pm.join("") + "</div></div>" : "";
+
+    var rtips = tips(u, e).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+    var rm = b.removed.length ? '<p class="note">Món lõi mặc định nhường chỗ cho đồ khắc chế: ' + b.removed.map(esc).join(", ") + ". Mua lại nếu trận đã thắng thế.</p>" : "";
+
+    var runeTip = [];
+    if (has(e, "poke")) runeTip.push("Cây phụ nên cân nhắc Second Wind nếu bảng rune hiện tại còn có.");
+    if (has(e, "assassin") && u.kind !== "TK") runeTip.push("Cân nhắc rune phòng thủ ở cây phụ để sống qua đợt burst đầu.");
+
+    el.innerHTML =
+      '<div class="rh"><span class="lane-tag">' + LANE_FULL[state.lane] + "</span><h2>" + esc(u.n) + " " + mark(u.n) + " đấu " + esc(e.n) + " " + mark(e.n) + '</h2><div class="chips" aria-label="Hồ sơ đối thủ">' + chips + "</div></div>" +
+      '<div class="sec"><h3>Thứ tự lên đồ</h3><ol class="build">' + items + "</ol>" + rm + "</div>" +
+      '<div class="cols">' +
+      '<div class="box"><h3>Giày</h3><div class="big">' + esc(bt[0]) + "</div><p>" + esc(bt[1]) + " " + esc(bt[2]) + "</p></div>" +
+      '<div class="box"><h3>Bảng ngọc</h3><div class="big">' + esc(ARCH[u.a].rune) + "</div><p>" + esc(ARCH[u.a].tree) + (runeTip.length ? ". " + esc(runeTip.join(" ")) : "") + "</p></div>" +
+      "</div>" +
+      '<div class="sec"><h3>Cách chơi khắc chế</h3><ul class="tips">' + rtips + "</ul></div>" + patchHtml;
+  }
+
+  var FAV_MAIN = [["Cho'Gath", "T"], ["Cho'Gath", "J"], ["Sylas", "M"], ["Sylas", "J"], ["Miss Fortune", "B"], ["Caitlyn", "B"]];
+  var FAV_SIM = [["Mordekaiser", "T"], ["Maokai", "T"], ["Rumble", "T"], ["Gwen", "T"],
+    ["LeBlanc", "M"], ["Akali", "M"], ["Katarina", "M"], ["Diana", "J"],
+    ["Jhin", "B"], ["Ashe", "B"], ["Varus", "B"], ["Ezreal", "B"], ["Jinx", "B"]];
+  function renderFav() {
+    var el = document.getElementById("favs");
+    function chip(f, main) {
+      return '<button type="button" class="fav' + (main ? " main" : "") + '" data-n="' + esc(f[0]) + '" data-l="' + f[1] + '" aria-pressed="' + (state.me === f[0] && state.lane === f[1]) + '">' + esc(f[0]) + " <small>" + LANES[f[1]] + "</small></button>";
+    }
+    el.innerHTML = '<h3>Hay chơi</h3><div class="favs">' + FAV_MAIN.map(function (f) { return chip(f, true); }).join("") +
+      '</div><p class="fav-label">Cùng lối chơi</p><div class="favs">' + FAV_SIM.map(function (f) { return chip(f, false); }).join("") + "</div>";
+    Array.prototype.forEach.call(el.querySelectorAll(".fav"), function (b) {
+      b.addEventListener("click", function () {
+        var n = b.getAttribute("data-n"), l = b.getAttribute("data-l");
+        state.lane = l; state.me = n;
+        var f = BY[state.foe];
+        if (!f || f.l.indexOf(l) < 0 || f.n === n) state.foe = DEF[l][0] !== n ? DEF[l][0] : DEF[l][1];
+        q.me = ""; q.foe = "";
+        save(); renderAll();
+      });
+    });
+  }
+
+  function renderAll() { renderFav(); renderLanes(); renderPick("me"); renderPick("foe"); renderResult(); }
+  renderAll();
+})();
+</script>
